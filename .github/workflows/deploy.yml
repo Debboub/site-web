@@ -1,82 +1,20 @@
-yaml
-name: Déploiement Automatique
+name: Deploy Website
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch:  # Permet de déclencher manuellement
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+    branches: [main]
 
 jobs:
-  # Job de construction
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-      # Étape 1 : Télécharger le code
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      # Étape 2 : Afficher les informations
-      - name: Info
-        run: |
-          echo "Déploiement en cours..."
-          echo "Branche : ${{ github.ref }}"
-          echo "Commit : ${{ github.sha }}"
-          echo "Auteur : ${{ github.actor }}"
-          echo ""
-          echo "Fichiers à déployer :"
-          ls -la
-      
-      # Étape 3 : Préparer les fichiers
-      - name: Préparation
-        run: |
-          # Créer un fichier de version
-          echo "Version: 1.0" > version.txt
-          echo "Build: ${{ github.run_number }}" >> version.txt
-          echo "Date: $(date)" >> version.txt
-          echo "Commit: ${{ github.sha }}" >> version.txt
-          
-          echo "Fichiers préparés"
-      
-      # Étape 4 : Compresser (optionnel)
-      - name: Vérifier taille
-        run: |
-          echo "Taille des fichiers :"
-          du -sh *
-      
-      # Étape 5 : Upload les artefacts
-      - name: Upload artefact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-  
-  # Job de déploiement
   deploy:
-    needs: build
     runs-on: ubuntu-latest
-    
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    
     steps:
-      # Étape 1 : Déployer sur GitHub Pages
-      - name: Déployer
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v4
       
-      # Étape 2 : Notifier le succès
-      - name: Notifier succès
-        run: |
-          echo "DÉPLOIEMENT RÉUSSI !"
-          echo " Site disponible à : ${{ steps.deployment.outputs.page_url }}"
-          echo ""
-          echo " Détails :"
-          echo "- Workflow : ${{ github.workflow }}"
-          echo "- Exécution : #${{ github.run_number }}"
-          echo "- Durée : $(($(date +%s) - $(date -d "${{ github.event.head_commit.timestamp }}" +%s))) secondes"
+      - name: Show files
+        run: ls -la
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
